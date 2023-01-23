@@ -1,13 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from bert import model
 from bert import dataprocess as dp
 import torch
 from torch.utils.data import DataLoader
 
+
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self,tokenss, segmentss, mlm_pred_positionss, nsp_Y, mlm_Y):
+    def __init__(self, tokenss, segmentss, mlm_pred_positionss, nsp_Y, mlm_Y):
         self.tokenss = torch.LongTensor(tokenss)
         self.segmentss = torch.LongTensor(segmentss)
-        self.mlm_pred_positionss= torch.LongTensor(mlm_pred_positionss)
+        self.mlm_pred_positionss = torch.LongTensor(mlm_pred_positionss)
         self.nsp_Y = torch.LongTensor(nsp_Y)
         self.mlm_Y = torch.LongTensor(mlm_Y)
 
@@ -20,7 +23,7 @@ class Dataset(torch.utils.data.Dataset):
         return len(self.tokenss)
 
 
-def train(epochs = 10,batchSize=2):
+def train(epochs=10, batchSize=2):
     tokenss, segmentss, mlm_pred_positionss, nsp_Y, mlm_Y, vocab_dict = dp.getPreData(dp.seqs)
 
     dataSet = Dataset(tokenss, segmentss, mlm_pred_positionss, nsp_Y, mlm_Y)
@@ -32,14 +35,15 @@ def train(epochs = 10,batchSize=2):
         for tokenss, segmentss, mlm_pred_positionss, nsp_Y, mlm_Y in DataLoader(dataSet, batch_size=batchSize, shuffle=True):
             optimizer.zero_grad()
             encoded_X, mlm_Y_hat, nsp_Y_hat = net(tokenss, segmentss, mlm_pred_positionss)
-            mlm_Y_hat = mlm_Y_hat.reshape(-1,len(vocab_dict))
+            mlm_Y_hat = mlm_Y_hat.reshape(-1, len(vocab_dict))
             mlm_Y = mlm_Y.reshape(-1)
-            mlm_loss = criterion(mlm_Y_hat,mlm_Y)
-            nsp_loss = criterion(nsp_Y_hat,nsp_Y)
+            mlm_loss = criterion(mlm_Y_hat, mlm_Y)
+            nsp_loss = criterion(nsp_Y_hat, nsp_Y)
             loss = mlm_loss + nsp_loss
             loss.backward()
             optimizer.step()
-        print('epoch {}, loss = {:.4f}'.format(e,loss))
+        print('epoch {}, loss = {:.4f}'.format(e, loss))
+
 
 if __name__ == '__main__':
     '''
